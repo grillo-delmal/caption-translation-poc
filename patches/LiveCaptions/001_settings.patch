@@ -1,0 +1,463 @@
+diff --git a/src/asrproc.c b/src/asrproc.c
+index 0d4816a..4903bdc 100644
+--- a/src/asrproc.c
++++ b/src/asrproc.c
+@@ -184,9 +184,9 @@ asr_thread create_asr_thread(const char *model_path){
+             return NULL;
+         }
+ 
+-        GSettings *settings = g_settings_new("net.sapples.LiveCaptions");
+-        g_settings_set_string(settings, "active-model", model_default);
+-        g_object_unref(G_OBJECT(settings));
++        //GSettings *settings = g_settings_new("net.sapples.LiveCaptions");
++        //g_settings_set_string(settings, "active-model", model_default);
++        //g_object_unref(G_OBJECT(settings));
+     }
+ 
+     g_mutex_init(&data->text_mutex);
+diff --git a/src/history.c b/src/history.c
+index 5ca722a..17dd387 100644
+--- a/src/history.c
++++ b/src/history.c
+@@ -45,7 +45,7 @@ void history_init(void){
+ 
+     printf("Save file: %s\n", default_history_file);
+ 
+-    if(settings == NULL) settings = g_settings_new("net.sapples.LiveCaptions");
++    //if(settings == NULL) settings = g_settings_new("net.sapples.LiveCaptions");
+ }
+ 
+ 
+@@ -114,7 +114,7 @@ void save_current_history(const char *path){
+     FILE *f = fopen(path, "w");
+ 
+     bool write_active_session = active_session.entries_count > 0;
+-    write_active_session = write_active_session && g_settings_get_boolean(settings, "save-history");
++    //write_active_session = write_active_session && g_settings_get_boolean(settings, "save-history");
+ 
+     size_t num_sessions_to_write = past_sessions.num_sessions + (write_active_session ? 1 : 0);
+     fwrite(&num_sessions_to_write, sizeof(num_sessions_to_write), 1, f);
+diff --git a/src/line-gen.c b/src/line-gen.c
+index 9873af1..5854e14 100644
+--- a/src/line-gen.c
++++ b/src/line-gen.c
+@@ -115,7 +115,7 @@ void line_generator_init(struct line_generator *lg) {
+     lg->current_line = 0;
+     lg->active_start_of_lines[0] = 0;
+ 
+-    if(settings == NULL) settings = g_settings_new("net.sapples.LiveCaptions");
++    //if(settings == NULL) settings = g_settings_new("net.sapples.LiveCaptions");
+ 
+     token_capitalizer_init(&lg->tcap);
+ 
+@@ -161,14 +161,14 @@ void line_generator_update(struct line_generator *lg, size_t num_tokens, const A
+         }
+     }
+ 
+-    bool use_fade = g_settings_get_boolean(settings, "fade-text");
++    bool use_fade = false;//g_settings_get_boolean(settings, "fade-text");
+ 
+-    bool filter_slurs = g_settings_get_boolean(settings, "filter-slurs");
+-    bool filter_profanity = g_settings_get_boolean(settings, "filter-profanity");
++    bool filter_slurs = false;//g_settings_get_boolean(settings, "filter-slurs");
++    bool filter_profanity = false;//g_settings_get_boolean(settings, "filter-profanity");
+ 
+     FilterMode filter_mode = filter_profanity ? FILTER_PROFANITY : (filter_slurs ? FILTER_SLURS : FILTER_NONE);
+ 
+-    bool use_lowercase = !g_settings_get_boolean(settings, "text-uppercase");
++    bool use_lowercase = true;//!g_settings_get_boolean(settings, "text-uppercase");
+     char token_scratch[MAX_TOKEN_SCRATCH] = { 0 };
+ 
+     for(size_t i=0; i<AC_LINE_COUNT; i++){
+diff --git a/src/livecaptions-application.c b/src/livecaptions-application.c
+index 3a17882..9994ba2 100644
+--- a/src/livecaptions-application.c
++++ b/src/livecaptions-application.c
+@@ -37,7 +37,7 @@ static void deinit_audio(LiveCaptionsApplication *self){
+ static void init_audio(LiveCaptionsApplication *self) {
+     deinit_audio(self);
+ 
+-    gboolean use_microphone = g_settings_get_boolean(self->settings, "microphone");
++    gboolean use_microphone = true;//g_settings_get_boolean(self->settings, "microphone");
+     self->audio = create_audio_thread(use_microphone, self->asr);
+ 
+     asr_thread_flush(self->asr);
+@@ -73,7 +73,7 @@ static void livecaptions_application_show_welcome(LiveCaptionsApplication *self)
+     LiveCaptionsWelcome *welcome = g_object_new(LIVECAPTIONS_TYPE_WELCOME, "application", GTK_APPLICATION(self), NULL);
+     welcome->application = self;
+ 
+-    gdouble benchmark_result = g_settings_get_double(self->settings, "benchmark");
++    gdouble benchmark_result = 1.f;//g_settings_get_double(self->settings, "benchmark");
+     livecaptions_set_cancel_enabled(welcome, (benchmark_result >= MINIMUM_BENCHMARK_RESULT));
+ 
+     gtk_window_present (GTK_WINDOW (welcome));
+@@ -103,7 +103,7 @@ static void livecaptions_application_activate(GApplication *app) {
+ 
+     gtk_window_present(window);
+ 
+-    gdouble benchmark_result = g_settings_get_double(self->settings, "benchmark");
++    gdouble benchmark_result = 1.f;//g_settings_get_double(self->settings, "benchmark");
+ 
+     if(benchmark_result < MINIMUM_BENCHMARK_RESULT) {
+         livecaptions_application_show_welcome(self);
+@@ -150,7 +150,7 @@ livecaptions_application_dbus_register(GApplication     *app,
+ 
+     dblcap_external_set_keep_above(
+         self->dbus_external,
+-        g_settings_get_boolean(self->settings, "keep-on-top")
++        false//g_settings_get_boolean(self->settings, "keep-on-top")
+     );
+ 
+     g_signal_connect(self->dbus_external, "handle-allow-keep-above", G_CALLBACK(on_handle_allow_keep_above), self);
+@@ -247,7 +247,7 @@ livecaptions_application_show_preferences(G_GNUC_UNUSED GSimpleAction *action,
+ static void on_settings_change(G_GNUC_UNUSED GSettings *settings,
+                                char      *key,
+                                gpointer   user_data){
+-
++/*
+     LiveCaptionsApplication *self = user_data;
+ 
+     if(g_str_equal(key, "microphone")) {
+@@ -271,6 +271,7 @@ static void on_settings_change(G_GNUC_UNUSED GSettings *settings,
+             );
+         }
+     }
++    */
+ }
+ 
+ static void
+@@ -286,13 +287,13 @@ livecaptions_application_toggle_microphone(GSimpleAction *action,
+     self = LIVECAPTIONS_APPLICATION(user_data);
+     use_microphone = g_variant_get_boolean(state);
+ 
+-    g_settings_set_boolean(self->settings, "microphone", use_microphone);
++    //g_settings_set_boolean(self->settings, "microphone", use_microphone);
+ 
+     g_simple_action_set_state(action, state);
+ }
+ 
+ static void livecaptions_application_init(LiveCaptionsApplication *self) {
+-    self->settings = g_settings_new("net.sapples.LiveCaptions");
++    //self->settings = g_settings_new("net.sapples.LiveCaptions");
+ 
+     g_autoptr(GSimpleAction) quit_action = g_simple_action_new("quit", NULL);
+     g_signal_connect_swapped(quit_action, "activate", G_CALLBACK(g_application_quit), self);
+@@ -310,7 +311,7 @@ static void livecaptions_application_init(LiveCaptionsApplication *self) {
+     g_signal_connect(prefs_action, "activate", G_CALLBACK(livecaptions_application_show_preferences), self);
+     g_action_map_add_action(G_ACTION_MAP(self), G_ACTION(prefs_action));
+ 
+-    gboolean use_microphone = g_settings_get_boolean(self->settings, "microphone");
++    gboolean use_microphone = true;//g_settings_get_boolean(self->settings, "microphone");
+     g_autoptr(GSimpleAction) mic_action = g_simple_action_new_stateful("microphone", NULL, g_variant_new_boolean(use_microphone));
+     g_signal_connect(mic_action, "change-state", G_CALLBACK(livecaptions_application_toggle_microphone), self);
+     g_action_map_add_action(G_ACTION_MAP(self), G_ACTION(mic_action));
+@@ -332,7 +333,7 @@ static void livecaptions_application_init(LiveCaptionsApplication *self) {
+                                            });
+ 
+ 
+-    g_signal_connect(self->settings, "changed", G_CALLBACK(on_settings_change), self);
++    //g_signal_connect(self->settings, "changed", G_CALLBACK(on_settings_change), self);
+ }
+ 
+ 
+@@ -343,8 +344,8 @@ void livecaptions_application_finish_setup(LiveCaptionsApplication *self, gdoubl
+     gtk_window_destroy(self->welcome);
+     self->welcome = NULL;
+ 
+-    if(result > 0.0)
+-        g_settings_set_double(self->settings, "benchmark", result);
++    //if(result > 0.0)
++    //    g_settings_set_double(self->settings, "benchmark", result);
+ 
+     asr_thread_pause(self->asr, false);
+ }
+diff --git a/src/livecaptions-history-window.c b/src/livecaptions-history-window.c
+index 3f4edbd..cfb4fbe 100644
+--- a/src/livecaptions-history-window.c
++++ b/src/livecaptions-history-window.c
+@@ -85,7 +85,7 @@ static void add_text(LiveCaptionsHistoryWindow *self, char *text, bool is_text)
+     GtkWidget *label = gtk_label_new(text);
+ 
+     if(is_text){
+-        PangoFontDescription *desc = pango_font_description_from_string(g_settings_get_string(self->settings, "font-name"));
++        PangoFontDescription *desc = pango_font_description_from_string("Sans Regular 24");//g_settings_get_string(self->settings, "font-name"));
+         PangoAttribute *attr_font = pango_attr_font_desc_new(desc);
+         PangoAttrList *attr = gtk_label_get_attributes(GTK_LABEL(label));
+         if(attr == NULL){
+@@ -119,11 +119,11 @@ static void add_time(LiveCaptionsHistoryWindow *self, time_t timestamp, bool dat
+ static void add_session(LiveCaptionsHistoryWindow *self, const struct history_session *session){
+     if(session->entries_count == 0) return;
+ 
+-    bool use_lowercase = !g_settings_get_boolean(self->settings, "text-uppercase");
++    bool use_lowercase = true;//!g_settings_get_boolean(self->settings, "text-uppercase");
+     GString *string = g_string_new(NULL);
+ 
+-    bool filter_slurs = g_settings_get_boolean(self->settings, "filter-slurs");
+-    bool filter_profanity = g_settings_get_boolean(self->settings, "filter-profanity");
++    bool filter_slurs = false;//g_settings_get_boolean(self->settings, "filter-slurs");
++    bool filter_profanity = false;//g_settings_get_boolean(self->settings, "filter-profanity");
+ 
+     FilterMode filter_mode = filter_profanity ? FILTER_PROFANITY : (filter_slurs ? FILTER_SLURS : FILTER_NONE);
+     struct token_capitalizer tcap;
+@@ -283,7 +283,7 @@ static void export_cb(LiveCaptionsHistoryWindow *self) {
+ static gboolean deferred_update_keep_above(void *userdata) {
+     LiveCaptionsHistoryWindow *self = userdata;
+ 
+-    set_window_keep_above(GTK_WINDOW(self), g_settings_get_boolean(self->settings, "keep-on-top"));
++    set_window_keep_above(GTK_WINDOW(self), false);//g_settings_get_boolean(self->settings, "keep-on-top"));
+ 
+     return G_SOURCE_REMOVE;
+ }
+@@ -320,7 +320,7 @@ static void livecaptions_history_window_class_init(LiveCaptionsHistoryWindowClas
+ static void livecaptions_history_window_init(LiveCaptionsHistoryWindow *self) {
+     gtk_widget_init_template(GTK_WIDGET(self));
+ 
+-    self->settings = g_settings_new("net.sapples.LiveCaptions");
++    //self->settings = g_settings_new("net.sapples.LiveCaptions");
+ 
+ 
+     self->session_load = 0;
+diff --git a/src/livecaptions-settings.c b/src/livecaptions-settings.c
+index 8efc66b..bba01ed 100644
+--- a/src/livecaptions-settings.c
++++ b/src/livecaptions-settings.c
+@@ -54,7 +54,7 @@ static void about_cb(LiveCaptionsSettings *self) {
+     about =
+         g_object_new(ADW_TYPE_ABOUT_WINDOW,
+                     "transient-for", root,
+-                    "application-icon", "net.sapples.LiveCaptions",
++//                    "application-icon", "net.sapples.LiveCaptions",
+                     "application-name", _("Live Captions"),
+                     "developer-name", _("abb128"),
+                     "version", LIVECAPTIONS_VERSION,
+@@ -226,7 +226,7 @@ static void livecaptions_settings_class_init(LiveCaptionsSettingsClass *klass) {
+ static gboolean deferred_update_keep_above(void *userdata) {
+     LiveCaptionsSettings *self = userdata;
+ 
+-    set_window_keep_above(GTK_WINDOW(self), g_settings_get_boolean(self->settings, "keep-on-top"));
++    set_window_keep_above(GTK_WINDOW(self), false);//g_settings_get_boolean(self->settings, "keep-on-top"));
+ 
+     return G_SOURCE_REMOVE;
+ }
+@@ -241,7 +241,7 @@ static void on_model_selected(GtkCheckButton* button, LiveCaptionsSettings *self
+         return;
+     }
+ 
+-    g_settings_set_string(self->settings, "active-model", model);
++    //g_settings_set_string(self->settings, "active-model", model);
+ }
+ 
+ static void on_builtin_toggled(LiveCaptionsSettings *self) {
+@@ -249,11 +249,11 @@ static void on_builtin_toggled(LiveCaptionsSettings *self) {
+ 
+     const char *model_path = GET_MODEL_PATH();
+     asr_thread_update_model(self->application->asr, model_path);
+-    g_settings_set_string(self->settings, "active-model", model_path);
++    //g_settings_set_string(self->settings, "active-model", model_path);
+ }
+ 
+ static void on_model_deleted(GtkButton *button, LiveCaptionsSettings *self) {
+-    const char *model = g_quark_to_string((GQuark)g_object_get_data(button, "lcap-model-path"));
++/*    const char *model = g_quark_to_string((GQuark)g_object_get_data(button, "lcap-model-path"));
+     if(g_str_equal(model, "/app/LiveCaptions/models/aprilv0_en-us.april")) return;
+ 
+     char *active_model = g_settings_get_string(self->settings, "active-model");
+@@ -282,6 +282,7 @@ static void on_model_deleted(GtkButton *button, LiveCaptionsSettings *self) {
+     AdwActionRow *row = ADW_ACTION_ROW(gtk_widget_get_parent(gtk_widget_get_parent(gtk_widget_get_parent(button))));
+ 
+     adw_preferences_group_remove(self->models_list, row);
++    */
+ }
+ 
+ static void insert_model_to_list(LiveCaptionsSettings *self, gchar *model) {
+@@ -308,12 +309,13 @@ static void insert_model_to_list(LiveCaptionsSettings *self, gchar *model) {
+ 
+     gtk_check_button_set_group(button, first);
+ 
++    /*
+     char *active_model = g_settings_get_string(self->settings, "active-model");
+     if(g_str_equal(model, active_model)) {
+         gtk_check_button_set_active(button, true);
+     }
+-
+     g_free(active_model);
++    */
+ 
+     gpointer quark = (gpointer)g_quark_from_string(model);
+ 
+@@ -325,6 +327,7 @@ static void insert_model_to_list(LiveCaptionsSettings *self, gchar *model) {
+ }
+ 
+ static void init_models_page(LiveCaptionsSettings *self) {
++    /*
+     gchar **models = g_settings_get_strv(self->settings, "installed-models");
+ 
+     for(int i=0; models[i] != NULL; i++){
+@@ -333,9 +336,11 @@ static void init_models_page(LiveCaptionsSettings *self) {
+     }
+ 
+     g_strfreev(models);
++    */
+ }
+ 
+ static void add_new_model(LiveCaptionsSettings *self, gchar *model) {
++    /*
+     gchar **existing_models = g_settings_get_strv(self->settings, "installed-models");
+ 
+     if(g_strv_contains(existing_models, model)) return;
+@@ -350,9 +355,11 @@ static void add_new_model(LiveCaptionsSettings *self, gchar *model) {
+ 
+     g_strfreev(result);
+     g_strv_builder_unref(builder);
++    */
+ }
+ 
+ static void model_load_failsafe(LiveCaptionsSettings *self, bool load_default) {
++    /*
+     GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL;
+     GtkMessageDialog *dialog = gtk_message_dialog_new (self,
+                                         flags,
+@@ -376,12 +383,14 @@ static void model_load_failsafe(LiveCaptionsSettings *self, bool load_default) {
+     asr_thread_update_model(self->application->asr, prev_model);
+ 
+     if(load_default) gtk_check_button_set_active(self->radio_button_1, true);
++    */
+ }
+ 
+ static void on_add_model_response(GtkNativeDialog *native,
+                                   int        response,
+                                   LiveCaptionsSettings *self)
+ {
++    /*
+     if(response == GTK_RESPONSE_ACCEPT){
+         GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
+ 
+@@ -408,6 +417,7 @@ static void on_add_model_response(GtkNativeDialog *native,
+     }
+ 
+     g_object_unref(native);
++    */
+ }
+ 
+ static void livecaptions_settings_init(LiveCaptionsSettings *self) {
+@@ -420,29 +430,29 @@ static void livecaptions_settings_init(LiveCaptionsSettings *self) {
+     adw_action_row_set_activatable_widget(self->filter_slurs_switch_ar, GTK_WIDGET(self->filter_slurs_switch));
+     adw_action_row_set_activatable_widget(self->save_history_switch_ar, GTK_WIDGET(self->save_history_switch));
+ 
+-    self->settings = g_settings_new("net.sapples.LiveCaptions");
++//    self->settings = g_settings_new("net.sapples.LiveCaptions");
+ 
+-    g_settings_bind(self->settings, "text-uppercase", self->text_upper_switch, "state", G_SETTINGS_BIND_DEFAULT);
+-    g_settings_bind(self->settings, "fade-text", self->fade_text_switch, "state", G_SETTINGS_BIND_DEFAULT);
+-    g_settings_bind(self->settings, "filter-profanity", self->filter_profanity_switch, "state", G_SETTINGS_BIND_DEFAULT);
+-    g_settings_bind(self->settings, "filter-slurs", self->filter_slurs_switch, "state", G_SETTINGS_BIND_DEFAULT);
+-    g_settings_bind(self->settings, "save-history", self->save_history_switch, "state", G_SETTINGS_BIND_DEFAULT);
+-    g_settings_bind(self->settings, "line-width", self->line_width_adjustment, "value", G_SETTINGS_BIND_DEFAULT);
+-    g_settings_bind(self->settings, "window-transparency", self->window_transparency_adjustment, "value", G_SETTINGS_BIND_DEFAULT);
++//    g_settings_bind(self->settings, "text-uppercase", self->text_upper_switch, "state", G_SETTINGS_BIND_DEFAULT);
++//    g_settings_bind(self->settings, "fade-text", self->fade_text_switch, "state", G_SETTINGS_BIND_DEFAULT);
++//    g_settings_bind(self->settings, "filter-profanity", self->filter_profanity_switch, "state", G_SETTINGS_BIND_DEFAULT);
++//    g_settings_bind(self->settings, "filter-slurs", self->filter_slurs_switch, "state", G_SETTINGS_BIND_DEFAULT);
++//    g_settings_bind(self->settings, "save-history", self->save_history_switch, "state", G_SETTINGS_BIND_DEFAULT);
++//    g_settings_bind(self->settings, "line-width", self->line_width_adjustment, "value", G_SETTINGS_BIND_DEFAULT);
++//    g_settings_bind(self->settings, "window-transparency", self->window_transparency_adjustment, "value", G_SETTINGS_BIND_DEFAULT);
+ 
+-    g_settings_bind(self->settings, "font-name", self->font_button, "font", G_SETTINGS_BIND_DEFAULT);
++//    g_settings_bind(self->settings, "font-name", self->font_button, "font", G_SETTINGS_BIND_DEFAULT);
+ 
+     gtk_scale_add_mark(self->line_width_scale, 50.0, GTK_POS_TOP, NULL);
+     gtk_scale_add_mark(self->window_transparency_scale, 0.25, GTK_POS_TOP, NULL);
+ 
+     char benchmark_result[32];
+-    double benchmark_result_v = g_settings_get_double(self->settings, "benchmark");
++    double benchmark_result_v = 1.f;//g_settings_get_double(self->settings, "benchmark");
+     sprintf(benchmark_result, "%.2f", (float)benchmark_result_v);
+     gtk_label_set_text(self->benchmark_label, benchmark_result);
+ 
+     if(is_keep_above_supported(GTK_WINDOW(self))) {
+         adw_action_row_set_activatable_widget(self->keep_above_switch_ar, GTK_WIDGET(self->keep_above_switch));
+-        g_settings_bind(self->settings, "keep-on-top", self->keep_above_switch, "state", G_SETTINGS_BIND_DEFAULT);
++//        g_settings_bind(self->settings, "keep-on-top", self->keep_above_switch, "state", G_SETTINGS_BIND_DEFAULT);
+ 
+         gtk_widget_set_sensitive(GTK_WIDGET(self->keep_above_switch_ar), true);
+         gtk_widget_set_sensitive(GTK_WIDGET(self->keep_above_switch), true);
+diff --git a/src/livecaptions-window.c b/src/livecaptions-window.c
+index fe328f4..9342258 100644
+--- a/src/livecaptions-window.c
++++ b/src/livecaptions-window.c
+@@ -57,7 +57,7 @@ const char LINE_WIDTH_TEXT_TEMPLATE[] = "This program is free software: you can
+ static void update_line_width(LiveCaptionsWindow *self){
+     if(self->font_layout != NULL) g_object_unref(self->font_layout);
+ 
+-    int preferred_width = g_settings_get_int(self->settings, "line-width");
++    int preferred_width = 50;//g_settings_get_int(self->settings, "line-width");
+     size_t text_len = sizeof(LINE_WIDTH_TEXT_TEMPLATE);
+     if(preferred_width < text_len) text_len = preferred_width;
+ 
+@@ -81,7 +81,7 @@ static void update_line_width(LiveCaptionsWindow *self){
+ }
+ 
+ static void update_font(LiveCaptionsWindow *self) {
+-    PangoFontDescription *desc = pango_font_description_from_string(g_settings_get_string(self->settings, "font-name"));
++    PangoFontDescription *desc = pango_font_description_from_string("Sans Regular 24");//g_settings_get_string(self->settings, "font-name"));
+ 
+     PangoAttribute *attr_font = pango_attr_font_desc_new(desc);
+ 
+@@ -99,12 +99,12 @@ static void update_font(LiveCaptionsWindow *self) {
+ }
+ 
+ static void update_window_transparency(LiveCaptionsWindow *self) {
+-    bool use_transparency = g_settings_get_double(self->settings, "window-transparency") > 0.01;
++    bool use_transparency = false;//g_settings_get_double(self->settings, "window-transparency") > 0.01;
+ 
+     if(use_transparency){
+         gtk_widget_add_css_class(GTK_WIDGET(self), "transparent-mode");
+ 
+-        int transparency = (int)((1.0 - g_settings_get_double(self->settings, "window-transparency")) * 255.0);
++        int transparency = 255;//(int)((1.0 - g_settings_get_double(self->settings, "window-transparency")) * 255.0);
+ 
+         char css_data[256];
+         snprintf(css_data, 256, ".transparent-mode {\nbackground-color: #000000%02X;\n}", transparency);
+@@ -115,7 +115,7 @@ static void update_window_transparency(LiveCaptionsWindow *self) {
+ }
+ 
+ static void update_keep_above(LiveCaptionsWindow *self) {
+-    gboolean keep_above = g_settings_get_boolean(self->settings, "keep-on-top");
++    gboolean keep_above = false;//g_settings_get_boolean(self->settings, "keep-on-top");
+     if(!set_window_keep_above(GTK_WINDOW(self), keep_above)){
+         printf("Failed to set keep above\n");
+     }
+@@ -192,15 +192,15 @@ static gboolean show_relevant_slow_warning(void *userdata) {
+ static void livecaptions_window_init(LiveCaptionsWindow *self) {
+     gtk_widget_init_template(GTK_WIDGET(self));
+ 
+-    self->settings = g_settings_new("net.sapples.LiveCaptions");
++    //self->settings = g_settings_new("net.sapples.LiveCaptions");
+ 
+     self->css_provider = gtk_css_provider_new();
+     GtkStyleContext *context = gtk_widget_get_style_context(GTK_WIDGET(self));
+     gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(self->css_provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+ 
+-    g_signal_connect(self->settings, "changed", G_CALLBACK(on_settings_change), self);
++    //g_signal_connect(self->settings, "changed", G_CALLBACK(on_settings_change), self);
+     
+-    g_settings_bind(self->settings, "microphone", self->mic_button, "active", G_SETTINGS_BIND_DEFAULT);
++    //g_settings_bind(self->settings, "microphone", self->mic_button, "active", G_SETTINGS_BIND_DEFAULT);
+ 
+     self->font_layout = NULL;
+     self->font_layout_counter = 0;
+diff --git a/src/main.c b/src/main.c
+index 90a27fb..ecd5710 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -43,8 +43,8 @@ int main (int argc, char *argv[]) {
+                         pw_get_library_version());
+ #endif
+ 
+-    GSettings *settings = g_settings_new("net.sapples.LiveCaptions");
+-    char *active_model = g_settings_get_string(settings, "active-model");
++    //GSettings *settings = g_settings_new("net.sapples.LiveCaptions");
++    char *active_model = NULL;//g_settings_get_string(settings, "active-model");
+     if(active_model == NULL) active_model = GET_MODEL_PATH();
+ 
+     asr_thread asr = create_asr_thread(active_model);
