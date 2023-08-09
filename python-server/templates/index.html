@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Captions</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" /> 
+  <script src="{{ url_for('static', filename='4.7.2/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='captions.js') }}"></script>
+  </head>
+  <body>
+    <div id="caption-container">
+      <div id="captions">
+        <div id="cap_0"></div>
+        <div id="cap_1"></div>
+      </div>
+      <div id="translate">
+        <div id="es"></div>
+        <div id="jp"></div>
+      </div>
+    </div>
+  </body>
+</html>

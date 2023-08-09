@@ -18,6 +18,7 @@ I used the following projects:
 * tinyosc: to implement osc comms in LiveCaptions, ISC Licensed
 * pyliblo: To receive the data from LiveCaptions
 * EasyGoogleTranslate: to translate the things
+* Flask and socket.io: to show as a webpage so that it can be used by OBS :9
 
 To run it, run `deploy.sh`, then `run.sh` and finally run `osc_test.py` in parallel
 This is ment to run in Fedora 38... cos it's what I use.

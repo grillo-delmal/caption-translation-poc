@@ -1,15 +1,10 @@
 FROM fedora:38
 
-RUN dnf update -y \
-    && \
-    dnf groupinstall -y \
-        "Development Tools" \
-        "Development Libraries"
-
 RUN dnf -y install \
         meson \
         ninja-build \
         rsync \
+        git \
         cmake \
         g++  \
         libadwaita-devel \

@@ -1,4 +1,9 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
+
+pushd python-server
+python3 main.py &
+ID=$!
+popd
 
 if [ ! -f "./cache/april-english-dev-01110_en.april" ]; then
     pushd cache
@@ -16,3 +21,5 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`/cache/onnxruntime-linux-x64-1.15.1
 
 cd ./build_out/LiveCaptions/
 ./src/livecaptions
+
+kill -9 $ID
